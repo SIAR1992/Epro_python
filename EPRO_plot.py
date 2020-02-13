@@ -62,104 +62,99 @@ for i in range(len(filesNames)): #For loop for behandling af data, der loopes ig
     globals()['names%s' % i] = globals()['dm%s' % i][0,:] #Henter navne, som bliver brugt til senere labeling af plot mm.
     data[i].columns = globals()['names%s' % i] #Omdanner navne i dataframe "data", som bruges til først at sætte det samlede varmeforbrug for analysens plot
     if "Lagertab" in globals()['names%s' % i]: #Hvis der er lagertab (Antaget lager med tab) - kan det være at varmeforbruget i analysen er defineret som "Varmeforbrug" - OBS! - vær opmærksom på at EnergyPro skifter navne for flere forskellige analyser, har ikke selv gennemskuet fidusen endnu
-        globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values
-    else:
-        globals()['dm_varmeforbrug%s' % i] = data[i].T.iloc[-1].values
+        globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values #Antager at der er noget, der hedder "Varmeforbrug", foruddybning se overstående
+    else: 
+        globals()['dm_varmeforbrug%s' % i] = data[i].T.iloc[-1].values #Hvis der ikke er noget "Lagertab" så antages der at varmebehovet er samlet i sidste kolonne i Excel
     
-    globals()['dm_varmeforbrug_values%s' % i] = globals()['dm_varmeforbrug%s' % i][1:globals()['dm_varmeforbrug%s' % i].shape[0]]
-    globals()['VF%s' % i] = globals()['dm_varmeforbrug_values%s' % i].tolist()
-    for String in Common_names:
-        if String in globals()['names%s' % i]:
-            data_reduced[i] = data_reduced[i].drop([String],axis = 1)
-    globals()['dm_reduced%s' % i] = data_reduced[i].values
-    globals()['Used_names%s' % i] = globals()['dm_reduced%s' % i][0,1:globals()['dm_reduced%s' % i].shape[1]]
-    globals()['Values%s' % i] = globals()['dm_reduced%s' % i][:,1:globals()['dm%s' % i].shape[1]]
-    globals()['Values%s' % i] = globals()['Values%s' % i][1:globals()['Values%s' % i].shape[0],:]
-    globals()['label%s' % i] = globals()['Used_names%s' % i]
-    allLabels.extend(globals()['label%s' % i].tolist())
+    globals()['dm_varmeforbrug_values%s' % i] = globals()['dm_varmeforbrug%s' % i][1:globals()['dm_varmeforbrug%s' % i].shape[0]] #Der sorteres, således at kun værdierne fremstår i vektorer
+    globals()['VF%s' % i] = globals()['dm_varmeforbrug_values%s' % i].tolist() #Omdanner overstående til nympy list, som der kan arbejdes med i plots senere - Tænker overstående kan kombineres med overstående linje 
+    for String in Common_names: #Gennemgår "Common_names" for at fjerne irrellevant data fra behandling
+        if String in globals()['names%s' % i]: #Denne smides op for at undgå konflikt med ikke eksisterende strings i "Common_names"
+            data_reduced[i] = data_reduced[i].drop([String],axis = 1) #Her fjernes unødvendigt data igennem "String"
+    globals()['dm_reduced%s' % i] = data_reduced[i].values #omformulerer "data_reduced" til noget der kan arbejdes med, tænker at denne kan komprimeres lidt
+    globals()['Used_names%s' % i] = globals()['dm_reduced%s' % i][0,1:globals()['dm_reduced%s' % i].shape[1]] #Udtager navne, denne er en der kan tages
+    globals()['Values%s' % i] = globals()['dm_reduced%s' % i][:,1:globals()['dm%s' % i].shape[1]] #Tager værdierne og navne ud, da disse skal bruges til plottene 
+    globals()['Values%s' % i] = globals()['Values%s' % i][1:globals()['Values%s' % i].shape[0],:] #Denne tager kun værdierne ud - tænker at denne kan komprimeres lidt med overstående
+    globals()['label%s' % i] = globals()['Used_names%s' % i] #Gemmer de brugte navne, der ikke er fra sorteret 
+    allLabels.extend(globals()['label%s' % i].tolist()) #Alle labels der bruges i alle hentede Excel-filer bliver lagret i denne, hvilket skal bruges til farvelægningen
     
-    globals()['m%s' % i] = []
-    for k in range(0,globals()['Values%s' % i].shape[1]):
-            globals()['Values_list%s' % i] = globals()['Values%s' % i][:,k].tolist()
-            globals()['m%s' % i].append(globals()['Values_list%s' % i])
+    globals()['m%s' % i] = [] #Opretter matrix til at indeholde værdier der skal bruges til stackplot senere
+    for k in range(0,globals()['Values%s' % i].shape[1]): #For loop over størrelsen af "Values"- Denne kan nok komprimeres lidt
+            globals()['Values_list%s' % i] = globals()['Values%s' % i][:,k].tolist() #Omdanner til værdier der kan bruges i plot
+            globals()['m%s' % i].append(globals()['Values_list%s' % i]) #Samler disse værdier i matrix
             
-
-
-Index = globals()['dm_reduced%s' % 0][:,0]
-Index = Index[1:Index.size]
 
 
 #-------------- Farver -----------------------------------------------
 #Det kan være at der på et tidspunkt skal gemmes farvekoder, hvis der opstår noget ensartet, eventuelt labels. Så kan man lave en funktion, der akkumulerer valgte farver
-allLabels = list(set(allLabels))
+allLabels = list(set(allLabels)) #Fjerner alle ens elementer, således at når der skal farvelægges farvelægges der kun et element adgangen
 
-allLabelUser = allLabels
-allLabelUser.sort()
+allLabelUser = allLabels #Opretter ny parameter til at sorterer i labels - Kan være at denne kan komprimeres med nedstående
+allLabelUser.sort() # Her sorteres det 
 
 
-canvas1 = tk.Canvas(root, width = 300, height = 300)
-canvas1.pack()
+canvas1 = tk.Canvas(root, width = 300, height = 300) #Informationer der skal bruges til at lave vinduet til spørgsmålet der stilles omkring farverlægningen 
+canvas1.pack() #funktion der skal bruges til at lave vinduet for spørgsmålet
 
-MsgBox = tk.messagebox.askquestion ('Farver','Vil du vælge farver til plots?',icon = 'question')
-if MsgBox == 'yes':
+MsgBox = tk.messagebox.askquestion ('Farver','Vil du vælge farver til plots?',icon = 'question') #Selve tekstboks funktionen til spørgsmål om man vil farvelægge eller ej
+if MsgBox == 'yes': #Hvis ja køres farvekoden igennem
 
-    colors = [(250, 0, 0), (0, 250, 0), (0, 0, 250), (255, 255, 255)] * 4
+    colors = [(250, 0, 0), (0, 250, 0), (0, 0, 250), (255, 255, 255)] * 4 #Nogle farvekoder der skal bruges i sammenhæng med "color_chooser"
 
-    colorSaver = []
-    print(f'Der skal vælges farve for ',allLabelUser)
-    for Labels in allLabelUser:
-        print(f'Vælg farve for ',Labels)
-        chooser = color_chooser.ColorChooser()
-        result_color = chooser.askcolor(colors)
-        colorSaver.append(result_color)
+    colorSaver = [] #Opretter en parameter der skal tage farvekoder ind fra "color_saver"
+    print(f'Der skal vælges farve for ',allLabelUser) #skriver ud hvilke labels der skal vælges farver for
+    for Labels in allLabelUser: #Der for loopet igennem alle labels, således at alle farver vælges. Tænker at jeg her kan gemme nogle af farvene til nogle labels, hvis de er ens
+        print(f'Vælg farve for ',Labels) #Viser den enkelte label, der skal vælges farve for, så man er klar over hvad man vælger for 
+        chooser = color_chooser.ColorChooser() #Funktion der skal bruges til vinduet med farvevalg
+        result_color = chooser.askcolor(colors) #Funktionen der kalder på farvevælgeren
+        colorSaver.append(result_color) #parameteren til at gemme de valgte farvekoder
 
-    def RGB(color1): return '#%02x%02x%02x' % (color1)
-    farverBrugt = []
-    for farver in colorSaver:
-        farverBrugt.append(RGB(farver))
+    def RGB(color1): return '#%02x%02x%02x' % (color1) #funktion der omdanner ovrestående farvekoder til noget der kan bruges i plottene 
+    farverBrugt = [] #Danner parameter til at gemme farverne 
+    for farver in colorSaver: #For looper igennem "colorSaver" for at omdanne alle farver
+        farverBrugt.append(RGB(farver)) #De omdannede farver gemmes i parameteren
 
-    for i in range(len(filesNames)):
-        globals()['colorsForYou%s' % i] = []
-        for k in range(len(globals()['label%s' % i])): 
-            globals()['colorsForYou%s' % i].append(farverBrugt[allLabelUser.index(globals()['label%s' % i][k])])
+    for i in range(len(filesNames)): #Danner for loop til at smide farvene ind for hver Excel-fil
+        globals()['colorsForYou%s' % i] = [] #Laver parameter til gemme farver for hver Excel-fil
+        for k in range(len(globals()['label%s' % i])): #Kører igennem længden af "Labels", da farvekoderne skal matches med deres pågældende label
+            globals()['colorsForYou%s' % i].append(farverBrugt[allLabelUser.index(globals()['label%s' % i][k])]) #Her matches farvekoder med deres pågældende label og farve kode og gemmes i den nye parameter "colorsForYou"
 else:
-    farverBrugt = []
-    print('Ingen farver valgt')
+    farverBrugt = [] #Danner parameter, det kan være der skal tænkes noget None ind i processen for at undgå denne kode
+    print('Ingen farver valgt') #Skriver ud at der ikke er valgt nogen farver
 #---------------------------------------------------------------------
 
-# Plots laves her
-for i in range(len(filesNames)):
-    plt.figure()
-    plt.rc('axes', axisbelow=True)
-    plt.grid()
-    hfont = {'fontname':'Verdana'}
-    plt.axis([0, 8760, 0, math.ceil(np.amax(globals()['dm_varmeforbrug_values%s' % i])/5)*5])
-    plt.xlabel('Timer på året', **hfont)
-    plt.ylabel('Varmekapacitet, MW', **hfont)
+# Plots laves her-----------------------------------------------------
+for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Excel-filer
+    plt.figure() #Funktion, der starter figure plot
+    plt.rc('axes', axisbelow=True) #Sørger for at begge akser starter og mødes i 0,0 
+    plt.grid() #Sætter grid på plot
+    hfont = {'fontname':'Verdana'} #Styre font på plot - OBS! - sikre lige at denne svarer til der bruges i rapport eller powerpoint mm.
+    plt.axis([0, 8760, 0, math.ceil(np.amax(globals()['dm_varmeforbrug_values%s' % i])/5)*5]) #styrer view på akser, og runder op til nærmeste 5-er
+    plt.xlabel('Timer på året', **hfont)  #Sætter navn på x-akse
+    plt.ylabel('Varmekapacitet, MW', **hfont) #Sætter navn på y.akse
 
-    plt.plot(range(0,len(globals()['VF%s' % i])),globals()['VF%s' % i], label = "Varmebehov", color = "sandybrown", alpha=0.6)
-    if farverBrugt != []:
-        plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i], colors = globals()['colorsForYou%s' % i])    
-    else:    
-        plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i])    
+    plt.plot(range(0,len(globals()['VF%s' % i])),globals()['VF%s' % i], label = "Varmebehov", color = "sandybrown", alpha=0.6) #Plotter varmebehovet
+    if farverBrugt != []: # Hvis der er valgt farver plottes stackplot af hentede værdier
+        plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i], colors = globals()['colorsForYou%s' % i]) #Stackplot af værdier, hvor er der valgt farver i "colorsForYou"
+    else:    #Ellers plottes der uden farver
+        plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i])    #stackplot af værdier der plottes uden valg farve
     
-    ax = plt.subplot(111)
+    ax = plt.subplot(111) #Subplot deres laves for labels, der kommer til at stå neden under figuren
     
-    # Shrink current axis's height by 10% on the bottom
-    box = ax.get_position()
+    box = ax.get_position() #Laver box omkring labels
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                     box.width, box.height])
+                     box.width, box.height]) #Gør størrelsen af boxens højde til 10% af dens default værdi
     # Put a legend below current axis
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
-                        fancybox=True, shadow=True, ncol=4)
+                        fancybox=True, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
     
 #    plt.tight_layout()
     
-    name = 'myfig' + str(i) + '.png'
-    try:
-        plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200)
-    except:
-        print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}')
+    name = 'myfig' + str(i) + '.png' #parameter der laves til at for nu at lave navngivning myfig 1-antal af excel filer - Der skal nok tænkes noget bedre ind, så man kan finde rundt i det, antaget man har mange
+    try: #Prøv at lave nedenstående fil med givne path
+        plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200) #Gemmer figur på pathen "basepath"
+    except: #Eksisterer bathpath ikke skrives nedenstående, for at gøre opmærksom på at man skal oprette pathen for at gemme figurerne 
+        print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}') #Skrift der forklarer at der mangler at blive oprettet basepath
 
 
  # hello
