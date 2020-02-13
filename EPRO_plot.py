@@ -5,57 +5,63 @@ Created on Fri Feb  7 15:27:50 2020
 @author: SIAR
 """
 
-#Bibliotek
-import tkinter as tk
-from tkinter import filedialog
-import pandas as pd
-import matplotlib.pyplot as plt
-import color_chooser
-import numpy as np
-import math
-import os 
+#Bibliotek--------------------------------------------------------------------------------------------
+import tkinter as tk #Henter tkinter modulet, some indeholder Tk værktøjskassen, skal henters for at arbejde med pop-op vinduer
+from tkinter import filedialog #Henter funktionen, der gør det muligt at arbejde med filedialogs, det er dem, hvor vi kan browse rundt og vælge filer
+import pandas as pd #pandas og nympy er standard Python moduler, der indeholder mange vektor funktioner mm., som man kender det fra Matlab
+import numpy as np #se overstående
+import matplotlib.pyplot as plt #Er Pythons plotter modul, som indeholder en masse funktioner til at plotte med
+#----------------------------------OBS!!!!---------------------------------------------------------------------
+import color_chooser #Er en selv defineret class, SOM SKAL KØRES INDEN MODELLEN, ELLERS KAN DEN IKKE KØRER (Lav exception, der observerer om color_chooser er opdateret)
+#--------------------------------------------------------------------------------------------------------------
+import math #Standard Python modul med matematik funktioner hentes ind her
+import os #OS modulet hjælper Python med funktioner til at arbejde rundt i Operative System (Computeren)
+#-----------------------------------------------------------------------------------------------------
 
+#Path (Sti) definering--------------------------------------------------------------------------------
+Mappenavn = 'Plots' #OBS! - Definering af mappe, som figurer skal ligge i defineres det ikke, smider Python en besked om at den skal oprettes med pathen defineret for basepath
+basepath = os.path.abspath(Mappenavn) #Pathen, som bruges til at gemme figurer at plots senere 
+#-----------------------------------------------------------------------------------------------------
 
-#Path definering
-Mappenavn = 'Plots'
-basepath = os.path.abspath(Mappenavn)
-
-
-#Valg af Excel-filer
-root = tk.Tk()
-root.withdraw()
-root.call('wm', 'attributes', '.', '-topmost', True)
-files = filedialog.askopenfilename(multiple=True) 
+#Valg af Excel-filer----------------------------------------------------------------------------------
+root = tk.Tk() #En starter, eller root, til det vindue/vinduer der skal laves igennem modellen
+root.withdraw() #Fjerner eventuelle oprettede vinduer uden at slette dem
+root.call('wm', 'attributes', '.', '-topmost', True) #Denne funktion tilføjes for at sikre at vinduet kommer på toppen af andre åbne vinduer, så skal man ikke lede efter det, når modellen kører og dermed misse det
+#files = filedialog.askopenfilename(multiple=True) #Denne potter vinduet, hvor filerne der skal importeres vælges
 #%gui tk
-var = root.tk.splitlist(files)
+#var = root.tk.splitlist(files)
+var = filedialog.askopenfilename(multiple=True) #Denne potter vinduet, hvor filerne der skal importeres vælges _ Overstående skal fjernes på et tidspunkt
 
-filePaths = []
-for f in var:
-  filePaths.append(f)
-filePaths
+filePaths = [] #Opretter list, der bedre kan arbejde med overstående paths sammen med indbyggede Python funktioner
+for f in var: #For-loop igennem alle valgte filer
+  filePaths.append(f) #Tilføjer Paths til filePaths i forlængelse af hinanden
+#filePaths
 
-filesNames = []
-for x in range(len(filePaths)):
-  tempNames = '\\'.join(filePaths[x].split('/'))
-  filesNames.append(tempNames)
+filesNames = [] #Opetter list, der skal omformulere overstående paths til at kunne blive benyttet i nedstående funktion, hvor data hentes ind fra Excel-filer
+for x in range(len(filePaths)): #Looper over længden af filePaths for at sikre at alle filePaths kommer med - Denne burde fjernes i fremtiden
+  tempNames = '\\'.join(filePaths[x].split('/')) #Omdatter "/" til "\\", som virker for nedenstående funktion, der henter data ind
+  filesNames.append(tempNames) #Tilføjer omdannede path-navne i forlængelse af hinanden 
+#-----------------------------------------------------------------------------------------------------  
   
-#Udtagning af data - Her fravælges blandt andet i Common_names ting, der ikke findes relevant - Dette kan tilføjes
-data=[pd.read_excel(path) for path in filesNames]
-Common_names =["X", "Varmeforbrug", "Samlet behov", "Lagertab", "Behov alene"]
-data_reduced = data
-allLabels = []     
 
-Timer=range(0,data[0].shape[0])
+#Udtagning og behandling af data fra Excel------------------------------------------------------------
+data=[pd.read_excel(path) for path in filesNames] #Panda funktion, som henter data ind fra præfabrikerede Excel-filer 
+Common_names =["X", "Varmeforbrug", "Samlet behov", "Lagertab", "Behov alene"] #Her skrives der nogle "Almindelig" navne, det forventes at EnergyPro bruger, det er til fra sortering af Data, således at man kun får det mest nødvendige - Det kan være man er nødsagt til at kigge gennem Excel-filen her
+data_reduced = data #Opretter en ny dataframe til at bearvejde data, uden at noget går tabt - Det kan være at denne skal fjernes på et senere tidspunkt
+
+allLabels = [] #Opretter list til at hente alle labels brugt i Excel, samt at koordinere farvevalg derimellem.      
+
+#Timer=range(0,data[0].shape[0])
    
 #Specifik lagring af data til brug i plots senere
 
-for i in range(len(filesNames)):
-    data[i] = data[i].apply(lambda x: pd.Series(x.dropna().values))
-    data[i] = data[i].dropna(axis=1, how='all')
-    globals()['dm%s' % i] = data[i].values
-    globals()['names%s' % i] = globals()['dm%s' % i][0,:]
-    data[i].columns = globals()['names%s' % i]
-    if "Lagertab" in globals()['names%s' % i]:
+for i in range(len(filesNames)): #For loop for behandling af data, der loopes igennem antallet af filer valgt
+    data[i] = data[i].apply(lambda x: pd.Series(x.dropna().values)) #Panda funktion, der tager alle NaN fundet i Excel-filen, det kan have noget at gøre med hvordan data ligger i Excel-filen
+    data[i] = data[i].dropna(axis=1, how='all') #Tager alle NaN-værdier i søjler og fjerner dem, skulle det være rækker skulle man skrive axis=0
+    globals()['dm%s' % i] = data[i].values #Omdanner dataframen til en matrix, hvorved andre funktioner kan benyttes (Bemærk Global funktionen, der opretter nye navne for dm, således det bliver dm0, dm1 osv alt efter antaller af valgte filer)
+    globals()['names%s' % i] = globals()['dm%s' % i][0,:] #Henter navne, som bliver brugt til senere labeling af plot mm.
+    data[i].columns = globals()['names%s' % i] #Omdanner navne i dataframe "data", som bruges til først at sætte det samlede varmeforbrug for analysens plot
+    if "Lagertab" in globals()['names%s' % i]: #Hvis der er lagertab (Antaget lager med tab) - kan det være at varmeforbruget i analysen er defineret som "Varmeforbrug" - OBS! - vær opmærksom på at EnergyPro skifter navne for flere forskellige analyser, har ikke selv gennemskuet fidusen endnu
         globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values
     else:
         globals()['dm_varmeforbrug%s' % i] = data[i].T.iloc[-1].values
@@ -84,6 +90,7 @@ Index = Index[1:Index.size]
 
 
 #-------------- Farver -----------------------------------------------
+#Det kan være at der på et tidspunkt skal gemmes farvekoder, hvis der opstår noget ensartet, eventuelt labels. Så kan man lave en funktion, der akkumulerer valgte farver
 allLabels = list(set(allLabels))
 
 allLabelUser = allLabels
