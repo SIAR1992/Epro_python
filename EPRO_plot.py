@@ -41,7 +41,7 @@ for x in range(len(filePaths)):
   
 #Udtagning af data - Her fravælges blandt andet i Common_names ting, der ikke findes relevant - Dette kan tilføjes
 data=[pd.read_excel(path) for path in filesNames]
-Common_names =["X", "Varmeforbrug", "Samlet behov", "Lagertab"]
+Common_names =["X", "Varmeforbrug", "Samlet behov", "Lagertab", "Behov alene"]
 data_reduced = data
 allLabels = []     
 
@@ -55,11 +55,16 @@ for i in range(len(filesNames)):
     globals()['dm%s' % i] = data[i].values
     globals()['names%s' % i] = globals()['dm%s' % i][0,:]
     data[i].columns = globals()['names%s' % i]
-    globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values
+    if "Lagertab" in globals()['names%s' % i]:
+        globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values
+    else:
+        globals()['dm_varmeforbrug%s' % i] = data[i].T.iloc[-1].values
+    
     globals()['dm_varmeforbrug_values%s' % i] = globals()['dm_varmeforbrug%s' % i][1:globals()['dm_varmeforbrug%s' % i].shape[0]]
     globals()['VF%s' % i] = globals()['dm_varmeforbrug_values%s' % i].tolist()
     for String in Common_names:
-        data_reduced[i] = data_reduced[i].drop([String],axis = 1)
+        if String in globals()['names%s' % i]:
+            data_reduced[i] = data_reduced[i].drop([String],axis = 1)
     globals()['dm_reduced%s' % i] = data_reduced[i].values
     globals()['Used_names%s' % i] = globals()['dm_reduced%s' % i][0,1:globals()['dm_reduced%s' % i].shape[1]]
     globals()['Values%s' % i] = globals()['dm_reduced%s' % i][:,1:globals()['dm%s' % i].shape[1]]
@@ -133,16 +138,15 @@ for i in range(len(filesNames)):
     
     ax = plt.subplot(111)
     
-    ax.plot()
     # Shrink current axis's height by 10% on the bottom
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
                      box.width, box.height])
     # Put a legend below current axis
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.18),
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
                         fancybox=True, shadow=True, ncol=4)
     
-    plt.tight_layout()
+#    plt.tight_layout()
     
     name = 'myfig' + str(i) + '.png'
     try:
@@ -151,6 +155,6 @@ for i in range(len(filesNames)):
         print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}')
 
 
-
+ # hello
 
   
