@@ -2,7 +2,7 @@
 """
 Created on Fri Feb  7 15:27:50 2020
 
-@author: SIAR
+@author: SIAR 
 """
 
 #Bibliotek--------------------------------------------------------------------------------------------
@@ -27,19 +27,13 @@ basepath = os.path.abspath(Mappenavn) #Pathen, som bruges til at gemme figurer a
 root = tk.Tk() #En starter, eller root, til det vindue/vinduer der skal laves igennem modellen
 root.withdraw() #Fjerner eventuelle oprettede vinduer uden at slette dem
 root.call('wm', 'attributes', '.', '-topmost', True) #Denne funktion tilføjes for at sikre at vinduet kommer på toppen af andre åbne vinduer, så skal man ikke lede efter det, når modellen kører og dermed misse det
-#files = filedialog.askopenfilename(multiple=True) #Denne potter vinduet, hvor filerne der skal importeres vælges
-#%gui tk
-#var = root.tk.splitlist(files)
-var = filedialog.askopenfilename(multiple=True) #Denne potter vinduet, hvor filerne der skal importeres vælges _ Overstående skal fjernes på et tidspunkt
+var = filedialog.askopenfilename(multiple=True) #Denne potter vinduet, hvor filerne der skal importeres vælges
 
 filePaths = [] #Opretter list, der bedre kan arbejde med overstående paths sammen med indbyggede Python funktioner
+filesNames = [] #Opetter list, der skal omformulere overstående paths til at kunne blive benyttet i nedstående funktion, hvor data hentes ind fra Excel-filer
 for f in var: #For-loop igennem alle valgte filer
   filePaths.append(f) #Tilføjer Paths til filePaths i forlængelse af hinanden
-#filePaths
-
-filesNames = [] #Opetter list, der skal omformulere overstående paths til at kunne blive benyttet i nedstående funktion, hvor data hentes ind fra Excel-filer
-for x in range(len(filePaths)): #Looper over længden af filePaths for at sikre at alle filePaths kommer med - Denne burde fjernes i fremtiden
-  tempNames = '\\'.join(filePaths[x].split('/')) #Omdatter "/" til "\\", som virker for nedenstående funktion, der henter data ind
+  tempNames = '\\'.join(filePaths[var.index(f)].split('/')) #Omdatter "/" til "\\", som virker for nedenstående funktion, der henter data ind. Der arbejdes over index her 
   filesNames.append(tempNames) #Tilføjer omdannede path-navne i forlængelse af hinanden 
 #-----------------------------------------------------------------------------------------------------  
   
@@ -48,40 +42,37 @@ for x in range(len(filePaths)): #Looper over længden af filePaths for at sikre 
 data=[pd.read_excel(path) for path in filesNames] #Panda funktion, som henter data ind fra præfabrikerede Excel-filer 
 Common_names =["X", "Varmeforbrug", "Samlet behov", "Lagertab", "Behov alene"] #Her skrives der nogle "Almindelig" navne, det forventes at EnergyPro bruger, det er til fra sortering af Data, således at man kun får det mest nødvendige - Det kan være man er nødsagt til at kigge gennem Excel-filen her
 data_reduced = data #Opretter en ny dataframe til at bearvejde data, uden at noget går tabt - Det kan være at denne skal fjernes på et senere tidspunkt
-
+ 
 allLabels = [] #Opretter list til at hente alle labels brugt i Excel, samt at koordinere farvevalg derimellem.      
-
-#Timer=range(0,data[0].shape[0])
    
 #Specifik lagring af data til brug i plots senere
 
 for i in range(len(filesNames)): #For loop for behandling af data, der loopes igennem antallet af filer valgt
     data[i] = data[i].apply(lambda x: pd.Series(x.dropna().values)) #Panda funktion, der tager alle NaN fundet i Excel-filen, det kan have noget at gøre med hvordan data ligger i Excel-filen
     data[i] = data[i].dropna(axis=1, how='all') #Tager alle NaN-værdier i søjler og fjerner dem, skulle det være rækker skulle man skrive axis=0
+
     globals()['dm%s' % i] = data[i].values #Omdanner dataframen til en matrix, hvorved andre funktioner kan benyttes (Bemærk Global funktionen, der opretter nye navne for dm, således det bliver dm0, dm1 osv alt efter antaller af valgte filer)
     globals()['names%s' % i] = globals()['dm%s' % i][0,:] #Henter navne, som bliver brugt til senere labeling af plot mm.
-    data[i].columns = globals()['names%s' % i] #Omdanner navne i dataframe "data", som bruges til først at sætte det samlede varmeforbrug for analysens plot
-    if "Lagertab" in globals()['names%s' % i]: #Hvis der er lagertab (Antaget lager med tab) - kan det være at varmeforbruget i analysen er defineret som "Varmeforbrug" - OBS! - vær opmærksom på at EnergyPro skifter navne for flere forskellige analyser, har ikke selv gennemskuet fidusen endnu
+    data[i].columns = globals()['names%s' % i] #Omdanner navne i dataframe "data", som bruges til først at sætte det samlede varmeforbrug for analysens plot - Det bruges til at navigere i dataframen imellem navne såsom "Varmetab" mm.
+    if "Lagertab" in globals()['names%s' % i]: #Hvis der er lagertab (Antaget lager med tab i EPRO) - kan det være at varmeforbruget i analysen er defineret som "Varmeforbrug" - OBS! - vær opmærksom på at EnergyPro skifter navne for flere forskellige analyser, har ikke selv gennemskuet fidusen endnu
         globals()['dm_varmeforbrug%s' % i] = data[i]["Varmeforbrug"].values #Antager at der er noget, der hedder "Varmeforbrug", foruddybning se overstående
     else: 
         globals()['dm_varmeforbrug%s' % i] = data[i].T.iloc[-1].values #Hvis der ikke er noget "Lagertab" så antages der at varmebehovet er samlet i sidste kolonne i Excel
     
-    globals()['dm_varmeforbrug_values%s' % i] = globals()['dm_varmeforbrug%s' % i][1:globals()['dm_varmeforbrug%s' % i].shape[0]] #Der sorteres, således at kun værdierne fremstår i vektorer
-    globals()['VF%s' % i] = globals()['dm_varmeforbrug_values%s' % i].tolist() #Omdanner overstående til nympy list, som der kan arbejdes med i plots senere - Tænker overstående kan kombineres med overstående linje 
-    for String in Common_names: #Gennemgår "Common_names" for at fjerne irrellevant data fra behandling
-        if String in globals()['names%s' % i]: #Denne smides op for at undgå konflikt med ikke eksisterende strings i "Common_names"
-            data_reduced[i] = data_reduced[i].drop([String],axis = 1) #Her fjernes unødvendigt data igennem "String"
+    globals()['VF%s' % i] = globals()['dm_varmeforbrug%s' % i][1:globals()['dm_varmeforbrug%s' % i].shape[0]].tolist()  #Der sorteres, således at kun værdierne fremstår i vektorer, og omdannes med nympy, således at det kan bruges i plot senere
+    removers = list(set(Common_names).intersection(set(globals()['names%s' % i].tolist()))) #Danner en liste med ord, der skal fjernes jf. "Common_names"
+    for String in removers: #Gennemgår "removers" for at fjerne irrellevant data fra behandling
+        data_reduced[i] = data_reduced[i].drop([String],axis = 1) #Her fjernes unødvendigt data igennem "String"
+            
     globals()['dm_reduced%s' % i] = data_reduced[i].values #omformulerer "data_reduced" til noget der kan arbejdes med, tænker at denne kan komprimeres lidt
-    globals()['Used_names%s' % i] = globals()['dm_reduced%s' % i][0,1:globals()['dm_reduced%s' % i].shape[1]] #Udtager navne, denne er en der kan tages
-    globals()['Values%s' % i] = globals()['dm_reduced%s' % i][:,1:globals()['dm%s' % i].shape[1]] #Tager værdierne og navne ud, da disse skal bruges til plottene 
-    globals()['Values%s' % i] = globals()['Values%s' % i][1:globals()['Values%s' % i].shape[0],:] #Denne tager kun værdierne ud - tænker at denne kan komprimeres lidt med overstående
-    globals()['label%s' % i] = globals()['Used_names%s' % i] #Gemmer de brugte navne, der ikke er fra sorteret 
+    globals()['Values%s' % i] = globals()['dm_reduced%s' % i][1:globals()['dm%s' % i].shape[0],1:globals()['dm%s' % i].shape[1]] #Tager kun værdierne ud, da disse skal bruges til plottene - fjerner indeks
+    
+    globals()['label%s' % i] = globals()['dm_reduced%s' % i][0,1:globals()['dm_reduced%s' % i].shape[1]] #Udtager navne, denne er en der kan tages
     allLabels.extend(globals()['label%s' % i].tolist()) #Alle labels der bruges i alle hentede Excel-filer bliver lagret i denne, hvilket skal bruges til farvelægningen
     
-    globals()['m%s' % i] = [] #Opretter matrix til at indeholde værdier der skal bruges til stackplot senere
+    globals()['m%s' % i] = [] #Opretter matrix til at indeholde værdier der skal bruges til stackplot senere, bliver nød til, foreløbigt at gøre det på denne måde, da Pythons .tolist()-function opstiller matrix forkert smides den på med det samme
     for k in range(0,globals()['Values%s' % i].shape[1]): #For loop over størrelsen af "Values"- Denne kan nok komprimeres lidt
-            globals()['Values_list%s' % i] = globals()['Values%s' % i][:,k].tolist() #Omdanner til værdier der kan bruges i plot
-            globals()['m%s' % i].append(globals()['Values_list%s' % i]) #Samler disse værdier i matrix
+            globals()['m%s' % i].append(globals()['Values%s' % i][:,k].tolist()) #Omdanner til værdier der kan bruges i plot (på bestemt måde) og samler disse i matrix
             
 
 
@@ -129,7 +120,7 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
     plt.rc('axes', axisbelow=True) #Sørger for at begge akser starter og mødes i 0,0 
     plt.grid() #Sætter grid på plot
     hfont = {'fontname':'Verdana'} #Styre font på plot - OBS! - sikre lige at denne svarer til der bruges i rapport eller powerpoint mm.
-    plt.axis([0, 8760, 0, math.ceil(np.amax(globals()['dm_varmeforbrug_values%s' % i])/5)*5]) #styrer view på akser, og runder op til nærmeste 5-er
+    plt.axis([0, 8760, 0, math.ceil(np.amax(globals()['VF%s' % i])/5)*5]) #styrer view på akser, og runder op til nærmeste 5-er
     plt.xlabel('Timer på året', **hfont)  #Sætter navn på x-akse
     plt.ylabel('Varmekapacitet, MW', **hfont) #Sætter navn på y.akse
 
@@ -156,7 +147,5 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
     except: #Eksisterer bathpath ikke skrives nedenstående, for at gøre opmærksom på at man skal oprette pathen for at gemme figurerne 
         print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}') #Skrift der forklarer at der mangler at blive oprettet basepath
 
-
- # hello
 
   

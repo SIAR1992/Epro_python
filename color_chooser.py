@@ -6,24 +6,6 @@ Created on Mon Feb 10 11:26:10 2020
 """
 
 
-#from tkinter.colorchooser import askcolor
-#def colorcode(*args):
-#    color = askcolor()
-#    label = Label(text='Vælg farve for {args}',bg=color[1]).pack()
-#    print(f'Farven valgt for {args} er nedenstående')
-#    return color
-
-
-
-#from tkinter import *
-#colorchooser.askcolor()
-
-#a = Tk()
-#def mcolor():
-#    color = colorchooser.askcolor()
-#    label = Label(text='your choosen color',bg=color[1]).pack()
-#button = Button(text="choose color",width = 30,command= mcolor).pack()
-#a.mainloop()
 
 import ctypes
 import ctypes.wintypes as wtypes
@@ -86,10 +68,3 @@ def int_to_rgb(int_color):
     blue = (int_color >> 16) & 255
 
     return red, green, blue
-
-#colors = [(250, 0, 0), (0, 250, 0), (0, 0, 250), (255, 255, 255)] * 4
-
-#chooser = ColorChooser()
-#result_color = chooser.askcolor(colors)
-
-#print(result_color)
