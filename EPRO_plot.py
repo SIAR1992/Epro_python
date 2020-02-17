@@ -140,8 +140,10 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
                         fancybox=True, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
     
 #    plt.tight_layout()
-    
-    name = 'myfig' + str(i) + '.png' #parameter der laves til at for nu at lave navngivning myfig 1-antal af excel filer - Der skal nok tænkes noget bedre ind, så man kan finde rundt i det, antaget man har mange
+
+# Figurer gemmes her--------------------------------------------------    
+    for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Excel-filer
+        name = os.path.basename(var[i]) + str(i) + '.png' #Navngivning af figur, der kaldes på navnet efter excel-filerne man vælger - OBS! - Sørg for at 
     try: #Prøv at lave nedenstående fil med givne path
         plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200) #Gemmer figur på pathen "basepath"
     except: #Eksisterer bathpath ikke skrives nedenstående, for at gøre opmærksom på at man skal oprette pathen for at gemme figurerne 
