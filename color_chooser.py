@@ -33,8 +33,10 @@ class ColorChooser:
     CC_FULLOPEN = 0x02
     custom_color_array = ctypes.c_uint32 * 16
     color_chooser = ctypes.windll.Comdlg32.ChooseColorW
-
-    def to_custom_color_array(self, custom_colors):
+    
+    
+    def to_custom_color_array(self):
+        custom_colors = [(250, 0, 0), (0, 250, 0), (0, 0, 250), (255, 255, 255)] * 4 #Nogle farvekoder der skal bruges i sammenhæng med "color_chooser"
         custom_int_colors = self.custom_color_array()
 
         for i in range(16):
@@ -42,16 +44,17 @@ class ColorChooser:
 
         return custom_int_colors
 
-    def askcolor(self, custom_colors):
+    def askcolor(self):
         struct = CHOOSECOLOR()
 
         ctypes.memset(ctypes.byref(struct), 0, ctypes.sizeof(struct))
         struct.lStructSize = ctypes.sizeof(struct)
         struct.Flags = self.CC_SOLIDCOLOR | self.CC_FULLOPEN
-        struct.lpCustColors = self.to_custom_color_array(custom_colors)
+        struct.lpCustColors = self.to_custom_color_array()
 
         if self.color_chooser(ctypes.byref(struct)):
-            result = int_to_rgb(struct.rgbResult)
+            result1 = int_to_rgb(struct.rgbResult)
+            result = RGB(result1)
         else:
             result = None
 
@@ -68,3 +71,5 @@ def int_to_rgb(int_color):
     blue = (int_color >> 16) & 255
 
     return red, green, blue
+
+def RGB(color1): return '#%02x%02x%02x' % (color1) #funktion der omdanner ovrestående farvekoder til noget der kan bruges i plottene

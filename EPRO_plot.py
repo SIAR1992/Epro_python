@@ -2,7 +2,7 @@
 """
 Created on Fri Feb  7 15:27:50 2020
 
-@author: SIAR 
+@author: SIAR  
 """
 
 #Bibliotek--------------------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ import pandas as pd #pandas og nympy er standard Python moduler, der indeholder 
 import numpy as np #se overstående
 import matplotlib.pyplot as plt #Er Pythons plotter modul, som indeholder en masse funktioner til at plotte med
 #----------------------------------OBS!!!!---------------------------------------------------------------------
-import color_chooser #Er en selv defineret class, SOM SKAL KØRES INDEN MODELLEN, ELLERS KAN DEN IKKE KØRER (Lav exception, der observerer om color_chooser er opdateret)
+from color_chooser import ColorChooser #Importerer farvevælger GUI'en, dermed rigtig vigtig at have i samme 
 #--------------------------------------------------------------------------------------------------------------
 import math #Standard Python modul med matematik funktioner hentes ind her
 import os #OS modulet hjælper Python med funktioner til at arbejde rundt i Operative System (Computeren)
@@ -90,20 +90,15 @@ canvas1.pack() #funktion der skal bruges til at lave vinduet for spørgsmålet
 MsgBox = tk.messagebox.askquestion ('Farver','Vil du vælge farver til plots?',icon = 'question') #Selve tekstboks funktionen til spørgsmål om man vil farvelægge eller ej
 if MsgBox == 'yes': #Hvis ja køres farvekoden igennem
 
-    colors = [(250, 0, 0), (0, 250, 0), (0, 0, 250), (255, 255, 255)] * 4 #Nogle farvekoder der skal bruges i sammenhæng med "color_chooser"
-
     colorSaver = [] #Opretter en parameter der skal tage farvekoder ind fra "color_saver"
     print(f'Der skal vælges farve for ',allLabelUser) #skriver ud hvilke labels der skal vælges farver for
+    farverBrugt = []
     for Labels in allLabelUser: #Der for loopet igennem alle labels, således at alle farver vælges. Tænker at jeg her kan gemme nogle af farvene til nogle labels, hvis de er ens
         print(f'Vælg farve for ',Labels) #Viser den enkelte label, der skal vælges farve for, så man er klar over hvad man vælger for 
-        chooser = color_chooser.ColorChooser() #Funktion der skal bruges til vinduet med farvevalg
-        result_color = chooser.askcolor(colors) #Funktionen der kalder på farvevælgeren
-        colorSaver.append(result_color) #parameteren til at gemme de valgte farvekoder
-
-    def RGB(color1): return '#%02x%02x%02x' % (color1) #funktion der omdanner ovrestående farvekoder til noget der kan bruges i plottene 
-    farverBrugt = [] #Danner parameter til at gemme farverne 
-    for farver in colorSaver: #For looper igennem "colorSaver" for at omdanne alle farver
-        farverBrugt.append(RGB(farver)) #De omdannede farver gemmes i parameteren
+        chooser = ColorChooser() #Funktion der skal bruges til vinduet med farvevalg
+        #result_color = chooser.askcolor(colors) #Funktionen der kalder på farvevælgeren
+        result_color = chooser.askcolor() #Funktionen der kalder på farvevælgeren
+        farverBrugt.append(result_color) #parameteren til at gemme de valgte farvekoder
 
     for i in range(len(filesNames)): #Danner for loop til at smide farvene ind for hver Excel-fil
         globals()['colorsForYou%s' % i] = [] #Laver parameter til gemme farver for hver Excel-fil
