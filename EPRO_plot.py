@@ -13,6 +13,7 @@ import numpy as np #se overstående
 import matplotlib.pyplot as plt #Er Pythons plotter modul, som indeholder en masse funktioner til at plotte med
 #----------------------------------OBS!!!!---------------------------------------------------------------------
 from color_chooser import ColorChooser #Importerer farvevælger GUI'en, dermed rigtig vigtig at have i samme 
+from color_saver import ColorSaver #Importerer farvegemmer, der gemmer farver til lokalt dannet database 
 #--------------------------------------------------------------------------------------------------------------
 import math #Standard Python modul med matematik funktioner hentes ind her
 import os #OS modulet hjælper Python med funktioner til at arbejde rundt i Operative System (Computeren)
@@ -87,23 +88,57 @@ allLabelUser.sort() # Her sorteres det
 canvas1 = tk.Canvas(root, width = 300, height = 300) #Informationer der skal bruges til at lave vinduet til spørgsmålet der stilles omkring farverlægningen 
 canvas1.pack() #funktion der skal bruges til at lave vinduet for spørgsmålet
 
+starter = ColorSaver(allLabelUser)
 MsgBox = tk.messagebox.askquestion ('Farver','Vil du vælge farver til plots?',icon = 'question') #Selve tekstboks funktionen til spørgsmål om man vil farvelægge eller ej
 if MsgBox == 'yes': #Hvis ja køres farvekoden igennem
-
-    colorSaver = [] #Opretter en parameter der skal tage farvekoder ind fra "color_saver"
-    print(f'Der skal vælges farve for ',allLabelUser) #skriver ud hvilke labels der skal vælges farver for
-    farverBrugt = []
-    for Labels in allLabelUser: #Der for loopet igennem alle labels, således at alle farver vælges. Tænker at jeg her kan gemme nogle af farvene til nogle labels, hvis de er ens
-        print(f'Vælg farve for ',Labels) #Viser den enkelte label, der skal vælges farve for, så man er klar over hvad man vælger for 
-        chooser = ColorChooser() #Funktion der skal bruges til vinduet med farvevalg
-        #result_color = chooser.askcolor(colors) #Funktionen der kalder på farvevælgeren
-        result_color = chooser.askcolor() #Funktionen der kalder på farvevælgeren
-        farverBrugt.append(result_color) #parameteren til at gemme de valgte farvekoder
-
-    for i in range(len(filesNames)): #Danner for loop til at smide farvene ind for hver Excel-fil
-        globals()['colorsForYou%s' % i] = [] #Laver parameter til gemme farver for hver Excel-fil
-        for k in range(len(globals()['label%s' % i])): #Kører igennem længden af "Labels", da farvekoderne skal matches med deres pågældende label
-            globals()['colorsForYou%s' % i].append(farverBrugt[allLabelUser.index(globals()['label%s' % i][k])]) #Her matches farvekoder med deres pågældende label og farve kode og gemmes i den nye parameter "colorsForYou"
+    SavedLabels, SavedColors,Remaining_labels = starter.read_from_db()
+    MsgBox = tk.messagebox.askquestion ('Farver','Der er eksisterende labels med valgte farver (Se output box), vil du genbruge dem? - HUSK AT RESTERENDE SKAL FARVELÆGGES',icon = 'question') 
+    if MsgBox == 'yes':
+        farverBrugt = []
+        existingLabels = []
+        if Remaining_labels == []:
+            existingLabels = SavedLabels
+            farverBrugt = SavedColors
+            if None in farverBrugt: 
+                res = [i for i in range(len(farverBrugt)) if farverBrugt[i] == None]
+                for i in range(len(res)):
+                    print(f'Vælg farve for ',existingLabels[i])
+                    chooser = ColorChooser()
+                    result_color = chooser.askcolor()
+                    farverBrugt[res[i]] = result_color
+            idx = np.argsort(existingLabels)
+            farverBrugt = np.array(farverBrugt)[idx.astype(int)].tolist()
+            starter.dynamic_data_entry(farverBrugt)
+        else:
+            for Labels in Remaining_labels: 
+                print(f'Vælg farve for ',Labels)
+                chooser = ColorChooser()
+                result_color = chooser.askcolor()
+                farverBrugt.append(result_color) #De valgte farver er gemt her 
+            existingLabels = Remaining_labels + SavedLabels
+            farverBrugt = farverBrugt + SavedColors #Smider gemte farver på efter de lige valgte farver
+            idx = np.argsort(existingLabels)
+            farverBrugt = np.array(farverBrugt)[idx.astype(int)].tolist()
+            starter.dynamic_data_entry(farverBrugt)
+        for i in range(len(filesNames)):
+            globals()['colorsForYou%s' % i] = []
+            for k in range(len(globals()['label%s' % i])):
+                globals()['colorsForYou%s' % i].append(farverBrugt[allLabelUser.index(globals()['label%s' % i][k])])
+    else:            
+        print(f'Der skal vælges farve for ',allLabelUser) #skriver ud hvilke labels der skal vælges farver for
+        farverBrugt = []
+        for Labels in allLabelUser: #Der for loopet igennem alle labels, således at alle farver vælges. Tænker at jeg her kan gemme nogle af farvene til nogle labels, hvis de er ens
+            print(f'Vælg farve for ',Labels) #Viser den enkelte label, der skal vælges farve for, så man er klar over hvad man vælger for 
+            chooser = ColorChooser() #Funktion der skal bruges til vinduet med farvevalg
+            result_color = chooser.askcolor() #Funktionen der kalder på farvevælgeren
+            farverBrugt.append(result_color) #parameteren til at gemme de valgte farvekoder
+        
+        starter.dynamic_data_entry(farverBrugt)
+        for i in range(len(filesNames)): #Danner for loop til at smide farvene ind for hver Excel-fil
+            globals()['colorsForYou%s' % i] = [] #Laver parameter til gemme farver for hver Excel-fil
+            for k in range(len(globals()['label%s' % i])): #Kører igennem længden af "Labels", da farvekoderne skal matches med deres pågældende label
+                globals()['colorsForYou%s' % i].append(farverBrugt[allLabelUser.index(globals()['label%s' % i][k])]) #Her matches farvekoder med deres pågældende label og farve kode og gemmes i den nye parameter "colorsForYou"
+        
 else:
     farverBrugt = [] #Danner parameter, det kan være der skal tænkes noget None ind i processen for at undgå denne kode
     print('Ingen farver valgt') #Skriver ud at der ikke er valgt nogen farver
@@ -120,7 +155,7 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
     plt.ylabel('Varmekapacitet, MW', **hfont) #Sætter navn på y.akse
 
     plt.plot(range(0,len(globals()['VF%s' % i])),globals()['VF%s' % i], label = "Varmebehov", color = "sandybrown", alpha=0.6) #Plotter varmebehovet
-    if farverBrugt != []: # Hvis der er valgt farver plottes stackplot af hentede værdier
+    if farverBrugt != [] or None not in farverBrugt: # Hvis der er valgt farver plottes stackplot af hentede værdier
         plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i], colors = globals()['colorsForYou%s' % i]) #Stackplot af værdier, hvor er der valgt farver i "colorsForYou"
     else:    #Ellers plottes der uden farver
         plt.stackplot(range(0,len(globals()['VF%s' % i])),globals()['m%s' % i], labels = globals()['label%s' % i])    #stackplot af værdier der plottes uden valg farve
@@ -131,16 +166,17 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
                      box.width, box.height]) #Gør størrelsen af boxens højde til 10% af dens default værdi
     # Put a legend below current axis
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
                         fancybox=True, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
+    ax.patch.set_visible(False)
+    plt.tight_layout()
     
-#    plt.tight_layout()
 
 # Figurer gemmes her--------------------------------------------------    
-    for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Excel-filer
-        name = os.path.basename(var[i]) + str(i) + '.png' #Navngivning af figur, der kaldes på navnet efter excel-filerne man vælger - OBS! - Sørg for at 
+    
+    name = os.path.basename(var[i]) + str(i) + '.png' #Navngivning af figur, der kaldes på navnet efter excel-filerne man vælger - OBS! - Sørg for at 
     try: #Prøv at lave nedenstående fil med givne path
-        plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200) #Gemmer figur på pathen "basepath"
+        plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200, bbox_inches='tight') #Gemmer figur på pathen "basepath"
     except: #Eksisterer bathpath ikke skrives nedenstående, for at gøre opmærksom på at man skal oprette pathen for at gemme figurerne 
         print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}') #Skrift der forklarer at der mangler at blive oprettet basepath
 
