@@ -12,11 +12,7 @@ conn = sqlite3.connect('colorBox.db') #Creating a connection to a database
 c = conn.cursor() #creating a cursor for that database 
         
 class ColorSaver:
-        """" Henter labels og farver ind, gemmer/overskriver gemte/henter gemte farver, hvis de eksisterer"""
-#        def __init__(self, label, color):
-#            self.labels = label
-#            self.colors = color
-#            create_table()
+        """" Henter labels og farver ind, gemmer/overskriver gemte/henter gemte farver, hvis de eksisterer. Funktioerne gør som de er navngivet"""
         def __init__(self, label):
             self.labels = label
             create_table()
