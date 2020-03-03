@@ -92,6 +92,7 @@ starter = ColorSaver(allLabelUser) # Kalder classen, der hedder ColorSaver, inde
 MsgBox = tk.messagebox.askquestion ('Farver','Vil du vælge farver til plots?',icon = 'question') #Selve tekstboks funktionen til spørgsmål om man vil farvelægge eller ej
 if MsgBox == 'yes': #Hvis ja køres farvekoden igennem
     SavedLabels, SavedColors,Remaining_labels = starter.read_from_db() #Kører modulet read_from_db, som henter data fra classen ud fra de indsatte labels. Den henter SavedLabels, der er alle relevante gemte labels fra databasen, den henter SavedColors, der er alle gemte farver til de pågældende farver, og den henter Remaining_labels, der er alle de labels der er navngivet for plottet, men ikke er gemt i databasen
+    Remaining_labels.sort()
     MsgBox = tk.messagebox.askquestion ('Farver','Der er eksisterende labels med valgte farver (Se output box), vil du genbruge dem? - HUSK AT RESTERENDE SKAL FARVELÆGGES',icon = 'question') #Opsætter message box, så man interaktivt kan vælge om man vil bruge de hentede farver, hvis ikke skal man farvelægge alle labels, som overskrives i den nuværende database, hvis de eksisterer
     if MsgBox == 'yes': #Hvis der vælges Yes for overstående messagebox
         farverBrugt = [] #Danner paramter til at gemme dannede farver til senere brug
