@@ -1,1 +1,5 @@
 /Plots
+.idea/workspace.xml
+__pycache__/Color.cpython-37.pyc
+__pycache__/color_chooser.cpython-37.pyc
+__pycache__/color_saver.cpython-37.pyc
