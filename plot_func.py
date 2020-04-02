@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt #Er Pythons plotter modul, som indeholder en mas
 import math #Standard Python modul med matematik funktioner hentes ind her
 import numpy as np #se overstående
 
+
 #-----------------------------------------------------------------------------------
 
 
@@ -21,19 +22,29 @@ def plot_func(i,VF,m,Labels,colorsForYou,farverBrugt,font):
     plt.xlabel('Timer på året', **hfont)  #Sætter navn på x-akse
     plt.ylabel('Varmekapacitet, MW', **hfont) #Sætter navn på y.akse
 
-    plt.plot(range(0,len(VF)),VF, label = "Varmebehov", color = "sandybrown", alpha=0.6) #Plotter varmebehovet
+    plt.plot(range(0,len(VF)),VF, label = "Varmebehov", color = "sandybrown", alpha=0.6, linewidth=0.5) #Plotter varmebehovet
     if None not in farverBrugt: # Hvis der er valgt farver plottes stackplot af hentede værdier
         plt.stackplot(range(0,len(VF)),m, labels = Labels, colors = colorsForYou) #Stackplot af værdier, hvor er der valgt farver i "colorsForYou"
     else:    #Ellers plottes der uden farver
         plt.stackplot(range(0,len(VF)),m, labels = Labels)    #stackplot af værdier der plottes uden valg farve
-    
+
     ax = plt.subplot(111) #Subplot deres laves for labels, der kommer til at stå neden under figuren
     
     box = ax.get_position() #Laver box omkring labels
-    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+    ax.set_position([box.x0, box.y0 + box.height * 0.25,
                      box.width, box.height]) #Gør størrelsen af boxens højde til 10% af dens default værdi
     # Put a legend below current axis
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                        fancybox=True, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
+    handles,labels = ax.get_legend_handles_labels()
+    
+    handles.append(handles[0])
+    handles.remove(handles[0])
+    #handles = handles[0:] + handles[:0]
+    labels.append(labels[0])
+    labels.remove(labels[0])
+    
+    #labels = labels[0:] + labels[:0]
+
+    ax.legend(handles,labels,loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                        fancybox=False, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
     ax.patch.set_visible(False)
     plt.tight_layout()

@@ -10,6 +10,7 @@ import tkinter as tk #Henter tkinter modulet, some indeholder Tk værktøjskasse
 from tkinter import filedialog #Henter funktionen, der gør det muligt at arbejde med filedialogs, det er dem, hvor vi kan browse rundt og vælge filer
 import pandas as pd #pandas og nympy er standard Python moduler, der indeholder mange vektor funktioner mm., som man kender det fra Matlab
 import matplotlib.pyplot as plt #Er Pythons plotter modul, som indeholder en masse funktioner til at plotte med
+
 #-------------------------------------------------------------------------------------------------------
 import farver_func as ffc
 import vector_func as vcf
@@ -86,7 +87,7 @@ for i in range(len(filesNames)): #For loop, der laver plots for alle valgte Exce
     try: #Prøv at lave nedenstående fil med givne path
         plt.savefig(os.path.join(basepath,name), format='png', dpi = 1200, bbox_inches='tight') #Gemmer figur på pathen "basepath"
     except: #Eksisterer bathpath ikke skrives nedenstående, for at gøre opmærksom på at man skal oprette pathen for at gemme figurerne 
-        print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path oprettes: {basepath}') #Skrift der forklarer at der mangler at blive oprettet basepath
+        print(f'Eksisterende path findes ikke - Opret mappe der hedder:"{Mappenavn}", således følgende path bør oprettes: {basepath}') #Skrift der forklarer at der mangler at blive oprettet basepath
 
 
   
