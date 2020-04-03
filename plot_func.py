@@ -33,18 +33,16 @@ def plot_func(i,VF,m,Labels,colorsForYou,farverBrugt,font):
     box = ax.get_position() #Laver box omkring labels
     ax.set_position([box.x0, box.y0 + box.height * 0.25,
                      box.width, box.height]) #Gør størrelsen af boxens højde til 10% af dens default værdi
-    # Put a legend below current axis
-    handles,labels = ax.get_legend_handles_labels()
     
-    handles.append(handles[0])
-    handles.remove(handles[0])
-    #handles = handles[0:] + handles[:0]
-    labels.append(labels[0])
-    labels.remove(labels[0])
+    handles,labels = ax.get_legend_handles_labels() #Henter handles og labels til at justerer, hvordan de skal stå (rækkefølgen heraf)
     
-    #labels = labels[0:] + labels[:0]
+    handles.append(handles[0]) #Tilføjer første handle (dette tilfælde varmebehovs kurven) til sidst
+    handles.remove(handles[0]) #Fjerner første handle
+
+    labels.append(labels[0]) #Tilføjer første label (dette tilfælde varmebehovs kurven) til sidst
+    labels.remove(labels[0]) #Fjerner første label 
 
     ax.legend(handles,labels,loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                        fancybox=False, shadow=True, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
-    ax.patch.set_visible(False)
-    plt.tight_layout()
+                        fancybox=True, shadow=False, ncol=4) #funktion der placerer labels under plot og styre placeringen mere specifikt med givne tal
+
+    plt.tight_layout() #Til at give et tæt look at plottet

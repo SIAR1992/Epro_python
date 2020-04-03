@@ -7,6 +7,7 @@ Created on Wed Mar  4 08:21:49 2020
 #Bibliotek--------------------------------------------------------------------------------------------
 import tkinter as tk #Henter tkinter modulet, some indeholder Tk værktøjskassen, skal henters for at arbejde med pop-op vinduer
 from tkinter import filedialog #Henter funktionen, der gør det muligt at arbejde med filedialogs, det er dem, hvor vi kan browse rundt og vælge filer
+from tkinter import messagebox #Henter funktionen, der gør det muligt at åbne messagebox, der bruges som dialog box imellem bruger og programmet
 from color_saver import ColorSaver #Importerer farvegemmer, der gemmer farver til lokalt dannet database
 from color_chooser import ColorChooser #Importerer farvevælger GUI'en, dermed rigtig vigtig at have i samme 
 import numpy as np #se overstående
